@@ -4,6 +4,6 @@ open terminal
 
 go to quotes folder
 
-node index.js
+use command node index.js
 
 click on localhost url in the terminal or go to localhost:3000/quotes
