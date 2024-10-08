@@ -10,16 +10,33 @@
 <body></body>
 <button id="previouspage">Page precedante</button>
 <button id="nextpage">Page suivante</button>
+<input id="searchBar" type="text" placeholder=""> 
+<button id="btnSearch">Rechercher</button>
 <div id="quotes"></div>
 </body>
 <script>
 
     let page = 1;
     let maxPage = 1;
+    let isSearching = false;
 
     async function fetchAllQuotes(page) {
         try {
             const response = await fetch(`http://api.quotable.io/quotes?page=${page}`);
+            if (!response.ok) {
+                throw new Error(`Error fetching quotes: ${response.statusText}`);
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error(error.message);
+            return "Unable to fetch quotes";
+        }
+    }
+
+    async function searchQuotes(page, query) {
+        try {
+            const response = await fetch(`http://api.quotable.io/search/quotes?query=${query}&page=${page}`);
             if (!response.ok) {
                 throw new Error(`Error fetching quotes: ${response.statusText}`);
             }
@@ -44,18 +61,39 @@
         let quotes = await fetchAllQuotes(page);
         maxPage = quotes.totalPages;
         div.innerHTML = formatQuotes(quotes);
+        isSearching = false;
+    }
+    async function displaySearchQuotes(page) {
+        let div = document.querySelector("#quotes");
+        let search = document.querySelector("#searchBar").value;
+        if (search != "") {
+            let quotes = await searchQuotes(page, search);
+            maxPage = quotes.totalPages;
+            div.innerHTML = formatQuotes(quotes);
+            isSearching = true;
+        }
     }
 
     function nextPage() {
-        page++
+        if (maxPage > page) {
+            page++
+        }
+        if (isSearching) {
+            displaySearchQuotes(page)
+        } else {
         displayQuotes(page)
+        }
     }
 
     function previousPage() {
         if (page > 0) {
             page--
         }
+        if (isSearching) {
+            displaySearchQuotes(page)
+        } else {
         displayQuotes(page)
+        }
     }
 
     let nextPageButton = document.querySelector("#nextpage");
@@ -63,6 +101,9 @@
 
     let previousPageButton = document.querySelector("#previouspage");
     previousPageButton.addEventListener("click", previousPage)
+
+    let btnSearch = document.querySelector("#btnSearch");
+    btnSearch.addEventListener("click", () => {displaySearchQuotes(page)});
 
 
     displayQuotes(page);
